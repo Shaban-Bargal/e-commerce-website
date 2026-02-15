@@ -24,7 +24,7 @@ dotenv.config();
 await connectDB(); 
 await connectCloudinary();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: "https://e-commerce-website-nu-fawn.vercel.app" || "http://localhost:5173", credentials: true }));
 
 app.get("/", (req, res) => {
     res.send("API is running");
