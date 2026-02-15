@@ -43,9 +43,9 @@ function Navbar() {
 
             {/* Desktop Menu */}
             <div className="hidden sm:flex items-center gap-8">
+                <NavLink className="rounded-2xl border border-primary/50 px-3 py-1 font-semibold text-primary/80 text-xs" to='/seller'>Seller Dashboard</NavLink>
                 <NavLink to='/'>Home</NavLink>
                 <NavLink to='/Products'>All Product</NavLink>
-                <NavLink to='/Contact'>Contact</NavLink>
 
                 <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
                     <input onChange={(e) => setSearchQuery(e.target.value)} className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500" type="text" placeholder="Search products" />
@@ -91,7 +91,7 @@ function Navbar() {
                     <NavLink to="/" className="block" onClick={() => setOpen(false)}>Home</NavLink>
                     <NavLink to="/Products" className="block" onClick={() => setOpen(false)}>All Products</NavLink>
                     {User && <NavLink to="/Products" className="block" onClick={() => setOpen(false)}>My Orders</NavLink>}
-                    <NavLink to="/Contact" className="block" onClick={() => setOpen(false)}>Contact</NavLink>
+                    <NavLink className="rounded-2xl border border-primary/50 px-3 py-1 font-semibold text-primary/80 text-xs" to='/seller'>Seller Dashboard</NavLink>
 
                     {!User ? (
                         <button onClick={() => {

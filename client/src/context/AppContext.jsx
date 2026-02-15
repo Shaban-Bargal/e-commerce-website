@@ -1,19 +1,18 @@
 /* eslint-disable */
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { dummyProducts } from "../assets/assets";
 import toast from "react-hot-toast";
 import axios from "axios";
 
-axios.defaults.withCredentials = true
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 
 const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
 
-    const currency = import.meta.env.VITE_CURRENCY
+    const currency = import.meta.env.VITE_CURRENCY;
 
     const navigate = useNavigate();
     const [User, setUser] = useState(null);
@@ -23,8 +22,7 @@ export const AppContextProvider = ({ children }) => {
     const [cartItems, setCartItems] = useState({});
     const [searchQuery, setSearchQuery] = useState({});
 
-
-    // Fetech Seller Status
+    // Fetch Seller Status
     const fetchSellerStatus = async () => {
         try {
             const { data } = await axios.get('/api/seller/is-auth');
@@ -38,49 +36,78 @@ export const AppContextProvider = ({ children }) => {
         }
     }
 
-    // fetch user status
+    // Fetch user status
     const fetchUser = async () => {
         try {
             const { data } = await axios.get('api/user/is-auth');
             if (data.success) {
                 setUser(data.user);
-                setCartItems(data.user.cartItem || {}); // 👈 هنا الحل
+                setCartItems(data.user.cartItem || {});
             }
         } catch (error) {
             setUser(null);
-            setCartItems({}); // 👈 أمان زيادة
+            setCartItems({});
         }
     }
 
-
-
-    // get cart items 
+    // get cart items count
     const getCartCount = () => {
         let count = 0;
         for (const key in cartItems) {
-            count += cartItems[key];
+            if (cartItems[key] > 0) {
+                count += cartItems[key];
+            }
         }
-        return count
+        return count;
     }
 
-    // get cart total amount
+    // 1. دالة الحساب (صافية وبدون تحديث State)
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const key in cartItems) {
-            let item = Products.find((product) => product._id === key);
-            totalAmount += item.offerPrice * cartItems[key];
+            if (cartItems[key] > 0) {
+                let itemInfo = Products.find((product) => product._id === key);
+                if (itemInfo) {
+                    totalAmount += itemInfo.offerPrice * cartItems[key];
+                }
+            }
         }
         return Math.floor(totalAmount * 100) / 100;
     }
 
+    // 2. useEffect لتنظيف السلة من المنتجات غير الموجودة (الـ IDs القديمة)
+    // ده بيحل إيرور الـ (Cannot update a component while rendering)
+    useEffect(() => {
+        if (Products.length > 0 && Object.keys(cartItems).length > 0) {
+            let updatedCart = { ...cartItems };
+            let hasChanged = false;
+
+            for (const key in cartItems) {
+                if (cartItems[key] > 0) {
+                    // نتحقق لو الـ ID ده موجود فعلاً في قائمة المنتجات
+                    let itemExists = Products.some((product) => product._id === key);
+                    if (!itemExists) {
+                        delete updatedCart[key];
+                        hasChanged = true;
+                    }
+                }
+            }
+
+            // لو حصل تغيير (لقينا منتجات قديمة)، نحدث السلة مرة واحدة
+            if (hasChanged) {
+                setCartItems(updatedCart);
+            }
+        }
+    }, [Products, cartItems]);
+
     // Add to cart
     const addToCart = (itemId) => {
-        let cartData = structuredClone(cartItems)
+        let cartData = structuredClone(cartItems);
 
         if (cartData[itemId]) {
-            cartData[itemId] += 1
+            cartData[itemId] += 1;
         } else {
-            cartData[itemId] = 1
+            cartData[itemId] = 1;
         }
 
         setCartItems(cartData);
@@ -90,13 +117,16 @@ export const AppContextProvider = ({ children }) => {
     // update cart item quantity
     const updateCartItem = (itemId, quantity) => {
         let cartData = structuredClone(cartItems);
-        cartData[itemId] = quantity;
+        if (quantity > 0) {
+            cartData[itemId] = quantity;
+        } else {
+            delete cartData[itemId];
+        }
         setCartItems(cartData);
         toast.success("Cart updated");
-
     }
 
-    // reomvoe cart item
+    // remove cart item
     const removeFromCart = (itemId) => {
         let cartData = structuredClone(cartItems);
         if (cartData[itemId]) {
@@ -122,12 +152,11 @@ export const AppContextProvider = ({ children }) => {
             toast.error(error.message);
         }
     };
-    useEffect(() => {
 
+    useEffect(() => {
         fetchUser();
         fetchSellerStatus();
         fetchProducts();
-
     }, []);
 
     // update database cart items
@@ -139,7 +168,9 @@ export const AppContextProvider = ({ children }) => {
                     toast.error(data.message);
                 }
             } catch (error) {
-                toast.error(error.response.data.message);
+                if (User) {
+                    toast.error(error.response?.data?.message || error.message);
+                }
             }
         }
 
@@ -178,7 +209,6 @@ export const AppContextProvider = ({ children }) => {
     );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAppContext = () => {
     return useContext(AppContext);
 };

@@ -698,7 +698,7 @@ export const dummyProducts = [
     inStock: true,
   },
 
-  // Instant
+  // Instant 
   {
     _id: "in01f25u",
     name: "Maggi Noodles 280g",
