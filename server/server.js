@@ -12,7 +12,7 @@ import addressRouter from "./Routes/addressRoute.js";
 import orderRouter from "./Routes/orderRoute.js";
 import { stripeWebhooks } from "./controllers/orderController.js";
 
-dotenv.config(); // لازم تبقى قبل استخدام process.env
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,19 +27,25 @@ app.post(
     stripeWebhooks
 );
 
-// بعد كده نستخدم json parser
 app.use(express.json());
 
-// CORS يسمح بالـ localhost و Vercel
+// --- تعديل الـ CORS الجديد لحل مشكلة اختفاء المنتجات ---
 app.use(
     cors({
-        origin: [
-            "https://e-commerce-website-nu-fawn.vercel.app",
-            "http://localhost:5173",
-        ],
+        origin: function (origin, callback) {
+            // يسمح بالطلبات بدون origin (زي الموبايل) أو localhost أو أي رابط ينتهي بـ vercel.app
+            if (!origin || origin.startsWith("http://localhost") || origin.endsWith(".vercel.app")) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
         credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"]
     })
 );
+// ----------------------------------------------------
 
 // Connect Database & Cloudinary
 await connectDB();
