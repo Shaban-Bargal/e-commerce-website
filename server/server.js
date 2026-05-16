@@ -29,23 +29,23 @@ app.post(
 
 app.use(express.json());
 
-// --- تعديل الـ CORS الجديد لحل مشكلة اختفاء المنتجات ---
+// --- 🛠️ تعديل الـ CORS المضمون لحل مشكلة اللوجن والمنتجات في الـ Web والموبايل ---
 app.use(
     cors({
         origin: function (origin, callback) {
-            // يسمح بالطلبات بدون origin (زي الموبايل) أو localhost أو أي رابط ينتهي بـ vercel.app
-            if (!origin || origin.startsWith("http://localhost") || origin.endsWith(".vercel.app")) {
+            // السماح بـ localhost بأي بورت، وأي رابط vercel، وأي طلب بدون origin (زي الموبايل)
+            if (!origin || /https?:\/\/localhost(:\d+)?$/.test(origin) || origin.endsWith(".vercel.app")) {
                 callback(null, true);
             } else {
                 callback(new Error("Not allowed by CORS"));
             }
         },
         credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ إضافة OPTIONS ضرورية جداً للكروم
+        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
     })
 );
-// ----------------------------------------------------
+// ----------------------------------------------------------------------------------
 
 // Connect Database & Cloudinary
 await connectDB();
